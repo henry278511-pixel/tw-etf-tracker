@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台股 ETF 持股追蹤與股票反查系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#3b82f6',
+            darkBg: '#0f172a',
+            darkCard: '#1e293b',
+            darkBorder: '#334155',
+            stockRed: '#ef4444',
+            stockGreen: '#10b981'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [v-cloak] { display: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased">
+  <div id="app" v-cloak class="flex flex-col min-h-screen">
+    <header class="border-b border-darkBorder bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/30">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-tight">台股 ETF 持股追蹤</h1>
+            <p class="text-xs text-slate-400">主動/被動 ETF 異動 & 股票反查</p>
+          </div>
+        </div>
+        <nav class="hidden md:flex space-x-1">
+          <button @click="currentTab = 'explore'" :class="navBtnClass('explore')"><i class="fa-solid fa-bolt mr-1.5"></i> ETF 探索</button>
+          <button @click="currentTab = 'reverse'" :class="navBtnClass('reverse')"><i class="fa-solid fa-magnifying-glass mr-1.5"></i> 股票反查 ETF</button>
+          <button @click="currentTab = 'heavy'" :class="navBtnClass('heavy')"><i class="fa-solid fa-ranking-star mr-1.5"></i> 重倉股排行</button>
+          <button @click="currentTab = 'similarity'" :class="navBtnClass('similarity')"><i class="fa-solid fa-scale-balanced mr-1.5"></i> ETF 相似度</button>
+        </nav>
+        <div class="text-right hidden sm:block">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+            <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+            更新: {{ data.update_time || '載入中...' }}
+          </span>
+        </div>
+      </div>
+      <div class="md:hidden flex border-t border-darkBorder overflow-x-auto py-2 px-3 space-x-1 bg-slate-900">
+        <button @click="currentTab = 'explore'" :class="mobileNavClass('explore')">ETF 探索</button>
+        <button @click="currentTab = 'reverse'" :class="mobileNavClass('reverse')">股票反查</button>
+        <button @click="currentTab = 'heavy'" :class="mobileNavClass('heavy')">重倉排行</button>
+        <button @click="currentTab = 'similarity'" :class="mobileNavClass('similarity')">相似度</button>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div v-if="loading" class="text-center py-20">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+        <p class="text-slate-400">正在加載最新 ETF 持股數據...</p>
+      </div>
+      <div v-else>
+        <!-- TAB 1: ETF 探索 -->
+        <div v-if="currentTab === 'explore'" class="space-y-6">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder">
+              <span class="text-xs text-slate-400">追蹤 ETF 檔數</span>
+              <div class="text-2xl font-bold mt-1 text-blue-400">{{ data.etfs ? data.etfs.length : 0 }} 檔</div>
+            </div>
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder">
+              <span class="text-xs text-slate-400">今日合計買進</span>
+              <div class="text-2xl font-bold mt-1 text-stockRed">+{{ data.summary?.total_buy || 0 }} 億</div>
+            </div>
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder">
+              <span class="text-xs text-slate-400">今日合計賣出</span>
+              <div class="text-2xl font-bold mt-1 text-stockGreen">-{{ data.summary?.total_sell || 0 }} 億</div>
+            </div>
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder">
+              <span class="text-xs text-slate-400">市場淨買賣</span>
+              <div class="text-2xl font-bold mt-1" :class="netMarketColor">{{ formatFlow(data.summary?.total_buy - data.summary?.total_sell) }} 億</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-darkCard/50 p-4 rounded-xl border border-darkBorder">
+            <div class="flex space-x-2">
+              <button @click="etfCategory = '全部'" :class="filterBtnClass('全部')">全部</button>
+              <button @click="etfCategory = '主動'" :class="filterBtnClass('主動')">主動式 ETF</button>
+              <button @click="etfCategory = '被動'" :class="filterBtnClass('被動')">被動型 ETF</button>
+            </div>
+            <div class="relative w-full sm:w-72">
+              <input type="text" v-model="etfSearch" placeholder="搜尋 ETF 代號或名稱..." class="w-full bg-slate-900 border border-darkBorder rounded-lg px-4 py-2 pl-9 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div v-for="etf in filteredEtfs" :key="etf.id" class="bg-darkCard rounded-xl border border-darkBorder p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <span class="font-mono text-sm font-semibold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/60 mr-2">{{ etf.id }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300">{{ etf.category }}</span>
+                    <h3 class="font-bold text-base text-slate-100 mt-2">{{ etf.name }}</h3>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs text-slate-400 block">持股淨買賣</span>
+                    <span class="text-sm font-bold" :class="etf.net_flow >= 0 ? 'text-stockRed' : 'text-stockGreen'">{{ etf.net_flow > 0 ? '+' : '' }}{{ etf.net_flow }} 億</span>
+                  </div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 py-2 border-y border-darkBorder/60 my-3">
+                  <span>規模：<strong class="text-slate-200">{{ etf.aum }} 億</strong></span>
+                  <span>殖利率：<strong class="text-amber-400">{{ etf.yield_rate }}</strong></span>
+                </div>
+                <div class="space-y-1.5 mb-4">
+                  <span class="text-xs text-slate-400 font-medium block">前三大持股：</span>
+                  <div class="grid grid-cols-3 gap-2">
+                    <div v-for="h in etf.top3" :key="h.code" class="bg-slate-900/60 p-2 rounded border border-darkBorder text-center">
+                      <span class="text-xs text-slate-200 block truncate">{{ h.name }}</span>
+                      <span class="text-xs font-mono font-semibold text-blue-400">{{ h.weight }}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-darkBorder mb-3 text-xs space-y-1.5">
+                  <div class="flex justify-between items-center text-slate-400 font-medium">
+                    <span>今日動作焦點</span>
+                    <span class="text-[10px]">買: +{{ etf.buy_amount }}億 / 賣: -{{ etf.sell_amount }}億</span>
+                  </div>
+                  <div v-if="etf.buys.length" class="text-stockRed truncate">加碼: {{ etf.buys.map(b => b.name + ' (+' + b.change_shares + '張)').join(', ') }}</div>
+                  <div v-if="etf.sells.length" class="text-stockGreen truncate">減碼: {{ etf.sells.map(s => s.name + ' (' + s.change_shares + '張)').join(', ') }}</div>
+                  <div v-if="!etf.buys.length && !etf.sells.length" class="text-slate-500">今日無顯著異動</div>
+                </div>
+              </div>
+              <button @click="openModal(etf)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-lg transition border border-darkBorder flex items-center justify-center">查看完整成分股明細 <i class="fa-solid fa-chevron-right ml-1.5 text-[10px]"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: 股票反查 ETF -->
+        <div v-if="currentTab === 'reverse'" class="space-y-6">
+          <div class="bg-darkCard p-6 rounded-xl border border-darkBorder max-w-3xl mx-auto text-center space-y-4">
+            <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-magnifying-glass text-blue-500 mr-2"></i>輸入個股，反查哪檔 ETF 持有！</h2>
+            <div class="relative max-w-xl mx-auto">
+              <input type="text" v-model="reverseQuery" placeholder="請輸入股票代號或名稱 (如: 2330 或 台積電)" class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl px-5 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none">
+              <button v-if="reverseQuery" @click="reverseQuery = ''" class="absolute right-4 top-3.5 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-slate-400">
+              <span>熱門速查：</span>
+              <button v-for="tag in ['台積電', '聯發科', '奇鋐', '旺矽', '台達電', '長榮', '廣達', '鴻海']" :key="tag" @click="reverseQuery = tag" class="px-2.5 py-1 bg-slate-800 hover:bg-blue-900/50 hover:text-blue-300 rounded-full border border-darkBorder transition">{{ tag }}</button>
+            </div>
+          </div>
+          <div v-if="selectedStock" class="bg-darkCard rounded-xl border border-darkBorder p-6 space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-darkBorder gap-3">
+              <div class="flex items-baseline space-x-3">
+                <h3 class="text-2xl font-bold text-white">{{ selectedStock.name }}</h3>
+                <span class="font-mono text-slate-400 text-lg">({{ selectedStock.code }})</span>
+                <span class="text-xl font-bold font-mono ml-2">{{ selectedStock.price }} 元</span>
+                <span class="text-sm font-bold font-mono px-2 py-0.5 rounded" :class="selectedStock.change.startsWith('+') ? 'bg-red-950 text-stockRed' : 'bg-emerald-950 text-stockGreen'">{{ selectedStock.change }}</span>
+              </div>
+              <div class="text-sm text-slate-400">共被 <strong class="text-blue-400 font-bold text-lg">{{ selectedStock.etfs.length }}</strong> 檔 ETF 持有</div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-darkBorder">
+                  <tr><th class="px-4 py-3">ETF 代號</th><th class="px-4 py-3">ETF 名稱</th><th class="px-4 py-3">類型</th><th class="px-4 py-3 text-right">持股權重</th><th class="px-4 py-3 text-right">持有張數</th><th class="px-4 py-3 text-right">今日異動</th></tr>
+                </thead>
+                <tbody class="divide-y divide-darkBorder">
+                  <tr v-for="item in selectedStock.etfs" :key="item.etf_id" class="hover:bg-slate-800/50">
+                    <td class="px-4 py-3 font-mono font-semibold text-blue-400">{{ item.etf_id }}</td>
+                    <td class="px-4 py-3 font-medium text-slate-200">{{ item.etf_name }}</td>
+                    <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded" :class="item.category === '主動' ? 'bg-indigo-950 text-indigo-300' : 'bg-slate-700 text-slate-300'">{{ item.category }}</span></td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-amber-400">{{ item.weight }}%</td>
+                    <td class="px-4 py-3 text-right font-mono text-slate-300">{{ formatNumber(item.shares) }} 張</td>
+                    <td class="px-4 py-3 text-right font-mono font-semibold" :class="item.change_shares > 0 ? 'text-stockRed' : (item.change_shares < 0 ? 'text-stockGreen' : 'text-slate-500')">{{ item.change_shares > 0 ? '+' : '' }}{{ item.change_shares !== 0 ? item.change_shares + ' 張' : '無異動' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: 重倉排行 -->
+        <div v-if="currentTab === 'heavy'" class="space-y-4">
+          <div class="bg-darkCard p-4 rounded-xl border border-darkBorder">
+            <h2 class="font-bold text-lg text-white">台股 ETF 重倉股總市值排行</h2>
+            <p class="text-xs text-slate-400">依全市場 ETF 加總持有市值排序（總張數 × 股價估算）</p>
+          </div>
+          <div class="bg-darkCard rounded-xl border border-darkBorder overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs text-slate-400 uppercase bg-slate-900/80 border-b border-darkBorder">
+                <tr><th class="px-4 py-3 w-12 text-center">#</th><th class="px-4 py-3">股名(代號)</th><th class="px-4 py-3 text-right">現價</th><th class="px-4 py-3 text-right">漲跌幅</th><th class="px-4 py-3 text-center">持有 ETF 檔數</th><th class="px-4 py-3 text-right">總持有張數</th><th class="px-4 py-3 text-right">持有估值 (億)</th></tr>
+              </thead>
+              <tbody class="divide-y divide-darkBorder">
+                <tr v-for="(stock, idx) in data.heavy_stocks" :key="stock.code" @click="quickViewStock(stock.code)" class="hover:bg-slate-800/60 cursor-pointer transition">
+                  <td class="px-4 py-3 text-center text-slate-500 font-mono">{{ idx + 1 }}</td>
+                  <td class="px-4 py-3"><span class="font-bold text-white hover:text-blue-400">{{ stock.name }}</span><span class="text-xs text-slate-400 font-mono ml-1.5">({{ stock.code }})</span></td>
+                  <td class="px-4 py-3 text-right font-mono font-medium">{{ stock.price }}</td>
+                  <td class="px-4 py-3 text-right font-mono font-bold" :class="stock.change.startsWith('+') ? 'text-stockRed' : 'text-stockGreen'">{{ stock.change }}</td>
+                  <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-xs bg-blue-950 text-blue-300 border border-blue-800/60 font-mono">{{ stock.etf_count }} 檔 ▸</span></td>
+                  <td class="px-4 py-3 text-right font-mono text-slate-300">{{ formatNumber(stock.total_shares) }}</td>
+                  <td class="px-4 py-3 text-right font-mono font-bold text-amber-400">{{ stock.value_billion }} 億</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: 相似度 -->
+        <div v-if="currentTab === 'similarity'" class="space-y-6">
+          <div class="bg-darkCard p-6 rounded-xl border border-darkBorder space-y-4">
+            <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-scale-balanced text-blue-500 mr-2"></i>ETF 成分股相似度計算器</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">第一檔 ETF：</label>
+                <select v-model="compareA" class="w-full bg-slate-900 border border-darkBorder rounded-lg p-2.5 text-sm text-slate-200">
+                  <option v-for="e in data.etfs" :key="e.id" :value="e.id">{{ e.id }} {{ e.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">第二檔 ETF：</label>
+                <select v-model="compareB" class="w-full bg-slate-900 border border-darkBorder rounded-lg p-2.5 text-sm text-slate-200">
+                  <option v-for="e in data.etfs" :key="e.id" :value="e.id">{{ e.id }} {{ e.name }}</option>
+                </select>
+              </div>
+            </div>
+            <div v-if="compareResult !== null" class="mt-4 p-5 bg-slate-900/80 rounded-xl border border-blue-900/50 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-400">成分股重疊比例：</span>
+                <div class="text-3xl font-extrabold text-blue-400 mt-1 font-mono">{{ compareResult }}%</div>
+              </div>
+              <div class="text-right text-xs text-slate-400">
+                <span>{{ compareResult > 80 ? '⚠️ 重疊度極高，建議分散配置' : (compareResult > 50 ? '中度重疊' : '✅ 互補性高') }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-darkCard p-6 rounded-xl border border-darkBorder space-y-4">
+            <h3 class="text-sm font-bold text-slate-300">📋 熱門高重疊 ETF 組合榜</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div v-for="pair in data.similarity_pairs" :key="pair.id_a + pair.id_b" @click="setCompare(pair.id_a, pair.id_b)" class="p-3 bg-slate-900 rounded-lg border border-darkBorder hover:border-slate-600 cursor-pointer flex justify-between items-center transition">
+                <div class="truncate mr-2">
+                  <span class="text-xs font-mono font-bold text-slate-200">{{ pair.id_a }}</span><span class="text-slate-500 mx-1">×</span><span class="text-xs font-mono font-bold text-slate-200">{{ pair.id_b }}</span>
+                  <p class="text-[11px] text-slate-400 truncate">{{ pair.name_a }} × {{ pair.name_b }}</p>
+                </div>
+                <span class="font-mono font-bold text-sm text-blue-400 bg-blue-950/80 px-2 py-1 rounded border border-blue-800">{{ pair.overlap }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成分股彈窗 -->
+      <div v-if="modalEtf" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-darkCard border border-darkBorder w-full max-w-2xl max-h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+          <div class="p-5 border-b border-darkBorder flex justify-between items-center bg-slate-900">
+            <div>
+              <span class="font-mono text-xs font-bold bg-blue-950 text-blue-400 px-2 py-0.5 rounded border border-blue-800">{{ modalEtf.id }}</span>
+              <h3 class="font-bold text-lg text-white mt-1">{{ modalEtf.name }} 持股明細</h3>
+            </div>
+            <button @click="modalEtf = null" class="text-slate-400 hover:text-white text-lg p-2"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="overflow-y-auto p-5 space-y-3">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900 text-slate-400 border-b border-darkBorder sticky top-0">
+                <tr><th class="p-2">代號</th><th class="p-2">股名</th><th class="p-2 text-right">權重</th><th class="p-2 text-right">張數</th><th class="p-2 text-right">當日增減</th></tr>
+              </thead>
+              <tbody class="divide-y divide-darkBorder">
+                <tr v-for="h in modalEtf.holdings" :key="h.code" class="hover:bg-slate-800/40">
+                  <td class="p-2 font-mono text-blue-400">{{ h.code }}</td>
+                  <td class="p-2 text-slate-200 font-medium">{{ h.name }}</td>
+                  <td class="p-2 text-right font-mono font-bold text-amber-400">{{ h.weight }}%</td>
+                  <td class="p-2 text-right font-mono text-slate-300">{{ formatNumber(h.shares) }}</td>
+                  <td class="p-2 text-right font-mono font-semibold" :class="h.change_shares > 0 ? 'text-stockRed' : (h.change_shares < 0 ? 'text-stockGreen' : 'text-slate-500')">{{ h.change_shares > 0 ? '+' : '' }}{{ h.change_shares !== 0 ? h.change_shares : '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-4 border-t border-darkBorder bg-slate-900 text-right">
+            <button @click="modalEtf = null" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs text-white rounded-lg">關閉</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue
+    createApp({
+      setup() {
+        const loading = ref(true)
+        const currentTab = ref('explore')
+        const data = ref({})
+        const etfCategory = ref('全部')
+        const etfSearch = ref('')
+        const reverseQuery = ref('2330')
+        const modalEtf = ref(null)
+        const compareA = ref('0050')
+        const compareB = ref('006208')
+
+        const fetchData = async () => {
+          try {
+            const res = await fetch('./data.json?t=' + Date.now())
+            data.value = await res.json()
+            if (data.value.etfs && data.value.etfs.length >= 2) {
+              compareA.value = data.value.etfs[0].id
+              compareB.value = data.value.etfs.id
+            }
+          } catch (e) {
+            console.error('讀取 data.json 失敗:', e)
+          } finally {
+            loading.value = false
+          }
+        }
+
+        onMounted(() => { fetchData() })
+
+        const filteredEtfs = computed(() => {
+          if (!data.value.etfs) return []
+          return data.value.etfs.filter(e => {
+            const matchCat = etfCategory.value === '全部' || e.category === etfCategory.value
+            const matchKw = !etfSearch.value || e.name.includes(etfSearch.value) || e.id.includes(etfSearch.value)
+            return matchCat && matchKw
+          })
+        })
+
+        const selectedStock = computed(() => {
+          if (!data.value.stock_to_etf || !reverseQuery.value) return null
+          const q = reverseQuery.value.trim()
+          for (const code in data.value.stock_to_etf) {
+            const item = data.value.stock_to_etf[code]
+            if (code === q || item.name.includes(q)) return item
+          }
+          return null
+        })
+
+        const compareResult = computed(() => {
+          if (!data.value.etfs || !compareA.value || !compareB.value) return null
+          const etfA = data.value.etfs.find(e => e.id === compareA.value)
+          const etfB = data.value.etfs.find(e => e.id === compareB.value)
+          if (!etfA || !etfB) return null
+          const mapA = {}
+          etfA.holdings.forEach(h => mapA[h.code] = h.weight)
+          let overlap = 0.0
+          etfB.holdings.forEach(h => { if (mapA[h.code]) overlap += Math.min(mapA[h.code], h.weight) })
+          return Math.round(overlap * 100) / 100
+        })
+
+        const setCompare = (idA, idB) => { compareA.value = idA; compareB.value = idB; currentTab.value = 'similarity' }
+        const quickViewStock = (code) => { reverseQuery.value = code; currentTab.value = 'reverse' }
+        const openModal = (etf) => { modalEtf.value = etf }
+        const formatNumber = (val) => (!val && val !== 0 ? '-' : Number(val).toLocaleString())
+        const formatFlow = (val) => {
+          if (!val && val !== 0) return '0'
+          const num = Math.round(val * 100) / 100
+          return (num > 0 ? '+' : '') + num
+        }
+        const netMarketColor = computed(() => ((data.value.summary?.total_buy || 0) - (data.value.summary?.total_sell || 0)) >= 0 ? 'text-stockRed' : 'text-stockGreen')
+        const navBtnClass = (tab) => currentTab.value === tab ? 'px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white' : 'px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition'
+        const mobileNavClass = (tab) => currentTab.value === tab ? 'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-blue-600 text-white' : 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap text-slate-400 hover:text-white bg-slate-800'
+        const filterBtnClass = (cat) => etfCategory.value === cat ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1.5 rounded-lg text-xs text-slate-300 bg-slate-800 hover:bg-slate-700 transition'
+
+        return {
+          loading, currentTab, data, etfCategory, etfSearch, reverseQuery,
+          selectedStock, modalEtf, compareA, compareB, compareResult,
+          setCompare, quickViewStock, openModal, formatNumber, formatFlow,
+          netMarketColor, navBtnClass, mobileNavClass, filterBtnClass
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
