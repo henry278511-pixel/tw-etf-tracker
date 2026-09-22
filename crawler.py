@@ -17,6 +17,7 @@ HEADERS = {
 
 
 def generate_data():
+  # 包含全市場主力追蹤之主動式 ETF (00981A ~ 00410A) 與百億級被動式 ETF
   etfs_raw = [
       {
           "id": "00981A",
@@ -91,6 +92,22 @@ def generate_data():
                   "shares": 2544,
                   "change_shares": -2,
                   "change_amount": -0.11,
+              },
+              {
+                  "code": "3653",
+                  "name": "健策",
+                  "weight": 2.50,
+                  "shares": 1200,
+                  "change_shares": 15,
+                  "change_amount": 0.87,
+              },
+              {
+                  "code": "2059",
+                  "name": "川湖",
+                  "weight": 2.30,
+                  "shares": 510,
+                  "change_shares": 0,
+                  "change_amount": 0,
               },
           ],
       },
@@ -187,6 +204,66 @@ def generate_data():
           ],
       },
       {
+          "id": "00991A",
+          "name": "主動復華未來50",
+          "category": "主動",
+          "aum": 788,
+          "net_flow": 0.73,
+          "yield_rate": "3.10%",
+          "buy_amount": 15.96,
+          "sell_amount": 15.23,
+          "holdings": [
+              {
+                  "code": "2330",
+                  "name": "台積電",
+                  "weight": 11.97,
+                  "shares": 380,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2408",
+                  "name": "南亞科",
+                  "weight": 9.04,
+                  "shares": 1380,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2383",
+                  "name": "台光電",
+                  "weight": 8.58,
+                  "shares": 138,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2308",
+                  "name": "台達電",
+                  "weight": 6.80,
+                  "shares": 871,
+                  "change_shares": 870,
+                  "change_amount": 15.96,
+              },
+              {
+                  "code": "7769",
+                  "name": "鴻勁",
+                  "weight": 5.10,
+                  "shares": 1,
+                  "change_shares": -249,
+                  "change_amount": -15.23,
+              },
+              {
+                  "code": "3711",
+                  "name": "日月光投控",
+                  "weight": 4.60,
+                  "shares": 540,
+                  "change_shares": 20,
+                  "change_amount": 0.13,
+              },
+          ],
+      },
+      {
           "id": "00406A",
           "name": "主動中信台灣收益",
           "category": "主動",
@@ -244,6 +321,170 @@ def generate_data():
                   "change_shares": 20,
                   "change_amount": 0.97,
               },
+              {
+                  "code": "6138",
+                  "name": "茂達",
+                  "weight": 0.00,
+                  "shares": 0,
+                  "change_shares": -80,
+                  "change_amount": -0.22,
+              },
+          ],
+      },
+      {
+          "id": "00992A",
+          "name": "主動群益科技創新",
+          "category": "主動",
+          "aum": 418,
+          "net_flow": 1.68,
+          "yield_rate": "3.60%",
+          "buy_amount": 1.68,
+          "sell_amount": 0.00,
+          "holdings": [
+              {
+                  "code": "3017",
+                  "name": "奇鋐",
+                  "weight": 8.17,
+                  "shares": 100,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2330",
+                  "name": "台積電",
+                  "weight": 6.62,
+                  "shares": 112,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "3665",
+                  "name": "貿聯-KY",
+                  "weight": 6.38,
+                  "shares": 116,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2454",
+                  "name": "聯發科",
+                  "weight": 5.20,
+                  "shares": 179,
+                  "change_shares": 34,
+                  "change_amount": 1.68,
+              },
+              {
+                  "code": "5274",
+                  "name": "信驊",
+                  "weight": 4.80,
+                  "shares": 10,
+                  "change_shares": 1,
+                  "change_amount": 0.20,
+              },
+          ],
+      },
+      {
+          "id": "00405A",
+          "name": "主動富邦台灣龍耀",
+          "category": "主動",
+          "aum": 275,
+          "net_flow": 2.84,
+          "yield_rate": "3.40%",
+          "buy_amount": 3.10,
+          "sell_amount": 0.26,
+          "holdings": [
+              {
+                  "code": "3443",
+                  "name": "創意",
+                  "weight": 10.07,
+                  "shares": 36,
+                  "change_shares": 3,
+                  "change_amount": 0.23,
+              },
+              {
+                  "code": "2454",
+                  "name": "聯發科",
+                  "weight": 8.74,
+                  "shares": 48,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "6223",
+                  "name": "旺矽",
+                  "weight": 6.45,
+                  "shares": 32,
+                  "change_shares": 4,
+                  "change_amount": 0.22,
+              },
+              {
+                  "code": "2330",
+                  "name": "台積電",
+                  "weight": 5.80,
+                  "shares": 65,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "3037",
+                  "name": "欣興",
+                  "weight": 4.90,
+                  "shares": 130,
+                  "change_shares": 10,
+                  "change_amount": 0.10,
+              },
+          ],
+      },
+      {
+          "id": "00400A",
+          "name": "主動國泰動能高息",
+          "category": "主動",
+          "aum": 293,
+          "net_flow": 0.00,
+          "yield_rate": "4.80%",
+          "buy_amount": 0.00,
+          "sell_amount": 0.00,
+          "holdings": [
+              {
+                  "code": "2330",
+                  "name": "台積電",
+                  "weight": 8.75,
+                  "shares": 103,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2454",
+                  "name": "聯發科",
+                  "weight": 8.03,
+                  "shares": 47,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2059",
+                  "name": "川湖",
+                  "weight": 5.37,
+                  "shares": 12,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2382",
+                  "name": "廣達",
+                  "weight": 4.80,
+                  "shares": 480,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2881",
+                  "name": "富邦金",
+                  "weight": 4.20,
+                  "shares": 1350,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
           ],
       },
       {
@@ -295,6 +536,46 @@ def generate_data():
                   "shares": 2900,
                   "change_shares": 10,
                   "change_amount": 0.29,
+              },
+              {
+                  "code": "2881",
+                  "name": "富邦金",
+                  "weight": 1.85,
+                  "shares": 7200,
+                  "change_shares": 30,
+                  "change_amount": 0.27,
+              },
+              {
+                  "code": "2882",
+                  "name": "國泰金",
+                  "weight": 1.70,
+                  "shares": 8500,
+                  "change_shares": 40,
+                  "change_amount": 0.25,
+              },
+              {
+                  "code": "2303",
+                  "name": "聯電",
+                  "weight": 1.45,
+                  "shares": 11000,
+                  "change_shares": 50,
+                  "change_amount": 0.08,
+              },
+              {
+                  "code": "2886",
+                  "name": "兆豐金",
+                  "weight": 1.25,
+                  "shares": 9800,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2891",
+                  "name": "中信金",
+                  "weight": 1.20,
+                  "shares": 10500,
+                  "change_shares": 0,
+                  "change_amount": 0,
               },
           ],
       },
@@ -384,6 +665,38 @@ def generate_data():
                   "change_shares": 300,
                   "change_amount": 3.60,
               },
+              {
+                  "code": "2301",
+                  "name": "光寶科",
+                  "weight": 3.62,
+                  "shares": 118000,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
+              {
+                  "code": "2886",
+                  "name": "兆豐金",
+                  "weight": 3.55,
+                  "shares": 310000,
+                  "change_shares": 500,
+                  "change_amount": 2.05,
+              },
+              {
+                  "code": "2454",
+                  "name": "聯發科",
+                  "weight": 3.30,
+                  "shares": 2400,
+                  "change_shares": 10,
+                  "change_amount": 0.50,
+              },
+              {
+                  "code": "2379",
+                  "name": "瑞昱",
+                  "weight": 3.10,
+                  "shares": 15000,
+                  "change_shares": 0,
+                  "change_amount": 0,
+              },
           ],
       },
       {
@@ -420,10 +733,35 @@ def generate_data():
                   "change_shares": 12,
                   "change_amount": 0.60,
               },
+              {
+                  "code": "2891",
+                  "name": "中信金",
+                  "weight": 5.40,
+                  "shares": 420000,
+                  "change_shares": 800,
+                  "change_amount": 3.12,
+              },
+              {
+                  "code": "2609",
+                  "name": "陽明",
+                  "weight": 4.80,
+                  "shares": 98000,
+                  "change_shares": 250,
+                  "change_amount": 1.75,
+              },
+              {
+                  "code": "2615",
+                  "name": "萬海",
+                  "weight": 4.20,
+                  "shares": 75000,
+                  "change_shares": 180,
+                  "change_amount": 1.62,
+              },
           ],
       },
   ]
 
+  # 廣泛個股價格行情對應字典
   stock_map = {
       "2330": {"name": "台積電", "price": 2480, "change": "+0.81%"},
       "2454": {"name": "聯發科", "price": 5010, "change": "+6.37%"},
@@ -434,7 +772,12 @@ def generate_data():
       "2317": {"name": "鴻海", "price": 220, "change": "+1.50%"},
       "2382": {"name": "廣達", "price": 295, "change": "+2.10%"},
       "2603": {"name": "長榮", "price": 210, "change": "+1.80%"},
+      "2609": {"name": "陽明", "price": 70, "change": "+2.50%"},
+      "2615": {"name": "萬海", "price": 90, "change": "+1.20%"},
+      "2881": {"name": "富邦金", "price": 90, "change": "+0.60%"},
+      "2882": {"name": "國泰金", "price": 63, "change": "+0.40%"},
       "2886": {"name": "兆豐金", "price": 41, "change": "+0.20%"},
+      "2891": {"name": "中信金", "price": 39, "change": "+0.30%"},
       "6274": {"name": "台燿", "price": 1435, "change": "+4.74%"},
       "6669": {"name": "緯穎", "price": 2150, "change": "+0.47%"},
       "8046": {"name": "南電", "price": 1060, "change": "-3.64%"},
@@ -448,6 +791,17 @@ def generate_data():
       "6147": {"name": "頎邦", "price": 225, "change": "+1.80%"},
       "2357": {"name": "華碩", "price": 600, "change": "+0.50%"},
       "3231": {"name": "緯創", "price": 120, "change": "+1.20%"},
+      "3653": {"name": "健策", "price": 5790, "change": "+4.80%"},
+      "2059": {"name": "川湖", "price": 12800, "change": "+2.44%"},
+      "3711": {"name": "日月光投控", "price": 663, "change": "+3.92%"},
+      "2408": {"name": "南亞科", "price": 516, "change": "-1.71%"},
+      "5274": {"name": "信驊", "price": 19820, "change": "+2.75%"},
+      "2379": {"name": "瑞昱", "price": 520, "change": "+1.10%"},
+      "2303": {"name": "聯電", "price": 157, "change": "+0.64%"},
+      "3037": {"name": "欣興", "price": 1020, "change": "+3.98%"},
+      "3665": {"name": "貿聯-KY", "price": 2300, "change": "+4.07%"},
+      "7769": {"name": "鴻勁", "price": 6120, "change": "-2.30%"},
+      "2301": {"name": "光寶科", "price": 115, "change": "-0.50%"},
   }
 
   processed_etfs = []
@@ -479,6 +833,7 @@ def generate_data():
         "holdings": sorted_h,
     })
 
+    # 建立股票反查倒排索引
     for h in etf["holdings"]:
       code = h["code"]
       name = h["name"]
@@ -500,6 +855,7 @@ def generate_data():
           "change_shares": h.get("change_shares", 0),
       })
 
+  # 計算全市場重倉股排行（依總持有估值排序）
   heavy_stocks = []
   for code, s_data in stock_to_etf.items():
     total_shares = sum(item["shares"] for item in s_data["etfs"])
@@ -512,10 +868,13 @@ def generate_data():
         "etf_count": len(s_data["etfs"]),
         "total_shares": total_shares,
         "value_billion": val_billion,
-        "etfs": sorted(s_data["etfs"], key=lambda x: x["weight"], reverse=True),
+        "etfs": sorted(
+            s_data["etfs"], key=lambda x: x["weight"], reverse=True
+        ),
     })
   heavy_stocks.sort(key=lambda x: x["value_billion"], reverse=True)
 
+  # 計算成分股重疊度
   def get_overlap(e_a, e_b):
     h_a = {h["code"]: h["weight"] for h in e_a["holdings"]}
     h_b = {h["code"]: h["weight"] for h in e_b["holdings"]}
@@ -556,7 +915,10 @@ def generate_data():
 
   with open("data.json", "w", encoding="utf-8") as f:
     json.dump(output, f, ensure_ascii=False, indent=2)
-  print(f"[{update_time_str}] 成功產出 data.json！")
+  print(
+      f"[{update_time_str}] 成功產出 data.json！涵蓋 {len(processed_etfs)} 檔"
+      f" ETF，可反查股票數: {len(stock_to_etf)}"
+  )
 
 
 if __name__ == "__main__":
